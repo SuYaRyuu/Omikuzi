@@ -1,0 +1,307 @@
+ <!DOCTYPE html>
+ <html lang="ja">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>おみくじ</title>
+     <style>
+         /* --- Google Fonts --- */
+         @import url('https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap');
+ 
+         /* --- 基本設定 --- */
+         :root {
+             --bg-color: #fff0f5; /* 背景色: ラベンダーブラッシュ */
+             --card-bg-color: #ffffff; /* カード背景色: ホワイト */
+             --accent-color: #ffb6c1; /* アクセントカラー: ライトピンク */
+             --text-color: #8b4513; /* 文字色: サドルブラウン */
+             --font-family: 'Yusei Magic', sans-serif; /* フォント */
+         }
+ 
+         body {
+             margin: 0;
+             padding: 0;
+             font-family: var(--font-family);
+             background: linear-gradient(135deg, #fdf5e6, var(--bg-color)); /* 背景グラデーション */
+             color: var(--text-color);
+             display: flex;
+             justify-content: center;
+             align-items: center;
+             min-height: 100vh;
+             overflow: hidden; /* はみ出した要素を隠す */
+             text-align: center;
+             position: relative; /* footerの配置基準 */
+         }
+ 
+         /* --- 舞い落ちる光の粒 --- */
+         .particle {
+             position: absolute;
+             top: -20px;
+             background-color: rgba(255, 255, 255, 0.7);
+             border-radius: 50%;
+             animation: fall linear infinite;
+             pointer-events: none; /* クリックイベントを無効化 */
+         }
+ 
+         @keyframes fall {
+             0% {
+                 transform: translateY(0) translateX(0);
+                 opacity: 1;
+             }
+             100% {
+                 transform: translateY(105vh) translateX(30px);
+                 opacity: 0;
+             }
+         }
+ 
+         /* --- 全体のコンテナ --- */
+         .container {
+             padding: 20px;
+             z-index: 1;
+         }
+ 
+         h1 {
+             font-size: 2.5rem;
+             color: var(--accent-color);
+             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+             margin-bottom: 10px;
+         }
+ 
+         p {
+             font-size: 1rem;
+             margin-bottom: 40px;
+         }
+ 
+         /* --- おみくじカード --- */
+         .omikuji-card-container {
+             perspective: 1000px; /* 3D効果の深度 */
+             margin-bottom: 30px; /* ボタンとの間隔 */
+         }
+ 
+         .omikuji-card {
+             width: 250px;
+             height: 300px;
+             position: relative;
+             transform-style: preserve-3d;
+             transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); /* おしゃれなイージング */
+             cursor: pointer;
+         }
+ 
+         .omikuji-card.is-flipped {
+             transform: rotateY(180deg);
+         }
+ 
+         .card-face {
+             position: absolute;
+             width: 100%;
+             height: 100%;
+             backface-visibility: hidden; /* 裏面を非表示 */
+             background-color: var(--card-bg-color);
+             border-radius: 20px;
+             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+             display: flex;
+             justify-content: center;
+             align-items: center;
+             flex-direction: column;
+         }
+ 
+         /* カードの表側 */
+         .card-front {
+             border: 5px solid var(--accent-color);
+         }
+ 
+         .omikuji-title {
+             font-size: 3rem;
+             writing-mode: vertical-rl; /* 縦書き */
+             letter-spacing: 0.2em;
+             padding: 20px;
+         }
+ 
+         /* カードの裏側 */
+         .card-back {
+             transform: rotateY(180deg);
+             border: 5px solid var(--accent-color);
+         }
+ 
+         .result-text {
+             font-size: 3.5rem;
+             writing-mode: vertical-rl; /* 縦書き */
+             letter-spacing: 0.2em;
+             padding: 20px;
+             opacity: 0;
+             transform: scale(0.8);
+             transition: opacity 0.5s 0.5s, transform 0.5s 0.5s; /* 少し遅れて表示 */
+         }
+ 
+         .is-flipped .result-text {
+             opacity: 1;
+             transform: scale(1);
+         }
+ 
+         /* --- ボタン --- */
+         .draw-button {
+             background-color: var(--accent-color);
+             color: white;
+             font-family: var(--font-family);
+             border: none;
+             padding: 15px 30px;
+             border-radius: 30px;
+             font-size: 1.2rem;
+             cursor: pointer;
+             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+             transition: background-color 0.3s ease;
+         }
+ 
+         .draw-button:hover {
+             background-color: #ff8eb4;
+         }
+ 
+         /* --- フッター --- */
+         footer {
+             position: absolute;
+             bottom: 10px;
+             font-size: 0.8rem;
+             color: rgba(0, 0, 0, 0.4);
+         }
+ 
+         /* --- スマホ向け調整 --- */
+         @media (max-width: 600px) {
+             h1 {
+                 font-size: 2rem;
+             }
+             p {
+                 font-size: 0.9rem;
+             }
+             .omikuji-card {
+                 width: 190px;
+                 height: 270px;
+             }
+             .omikuji-title, .result-text {
+                 font-size: 2.8rem;
+             }
+             .draw-button {
+                 padding: 18px 25px;
+                 font-size: 1rem;
+             }
+         }
+     </style>
+ </head>
+ <body>
+ 
+     <div class="particle-container"></div>
+ 
+     <div class="container">
+         <h1>楽しいおみくじ</h1>
+         <p>下のボタンを押して、今日の運勢を占おう！</p>
+         <div class="omikuji-card-container" id="omikuji-container">
+             <div class="omikuji-card" id="omikuji-card">
+                 <div class="card-face card-front">
+                     <span class="omikuji-title">おみくじ</span>
+                 </div>
+                 <div class="card-face card-back">
+                     <span id="result-text" class="result-text"></span>
+                 </div>
+             </div>
+         </div>
+         <button id="draw-button" class="draw-button">運勢を占う！</button>
+     </div>
+ 
+     <footer>
+     </footer>
+ 
+     <script>
+         document.addEventListener('DOMContentLoaded', () => {
+             const card = document.getElementById('omikuji-card');
+             const resultText = document.getElementById('result-text');
+             const drawButton = document.getElementById('draw-button');
+             let isFlipping = false;
+             let hasFlipped = false;
+ 
+             // 運勢リストと確率設定
+             const fortunes = [
+                 { name: 'ウルトラスーパー大吉', probability: 0.005 },
+                 { name: '神吉', probability: 0.015 },
+                 { name: '大吉', probability: 0.08 },
+                 { name: '中吉', probability: 0.15 },
+                 { name: '小吉', probability: 0.25 },
+                 { name: '吉',   probability: 0.30 },
+                 { name: '末吉', probability: 0.10 },
+                 { name: '凶',   probability: 0.05 },
+                 { name: '大凶', probability: 0.03 },
+                 { name: '最低凶', probability: 0.015 },
+                 { name: '地獄凶', probability: 0.005 }
+             ];
+ 
+             function drawFortune() {
+                 const random = Math.random();
+                 let cumulativeProbability = 0;
+                 for (const fortune of fortunes) {
+                     cumulativeProbability += fortune.probability;
+                     if (random < cumulativeProbability) {
+                         return fortune.name;
+                     }
+                 }
+                 return '吉';
+             }
+ 
+             function flipCard() {
+                 if (isFlipping) return;
+                 isFlipping = true;
+                 card.classList.add('is-flipped');
+                 setTimeout(() => {
+                     isFlipping = false;
+                     hasFlipped = true;
+                 }, 800);
+             }
+ 
+             function resetCard() {
+                 card.classList.remove('is-flipped');
+                 resultText.textContent = '';
+                 hasFlipped = false;
+             }
+ 
+             drawButton.addEventListener('click', () => {
+                 if (hasFlipped) {
+                     resetCard();
+                     setTimeout(() => {
+                         const result = drawFortune();
+                         resultText.textContent = result;
+                         flipCard();
+                     }, 300); // リセットアニメーションが終わるのを少し待つ
+                 } else {
+                     const result = drawFortune();
+                     resultText.textContent = result;
+                     flipCard();
+                 }
+             });
+ 
+             // 背景のキラキラを生成
+             const particleContainer = document.querySelector('.particle-container');
+             const particleCount = 50;
+             const colors = ['#ffb6c1', '#87cefa', '#f0e68c', '#98fb98', '#e0ffff']; // かわいいパステルカラー
+ 
+             for (let i = 0; i < particleCount; i++) {
+                 const particle = document.createElement('div');
+                 particle.classList.add('particle');
+ 
+                 const size = Math.random() * 8 + 2;
+                 particle.style.width = `${size}px`;
+                 particle.style.height = `${size}px`;
+ 
+                 particle.style.left = `${Math.random() * 100}vw`;
+ 
+                 const duration = Math.random() * 10 + 8;
+                 particle.style.animationDuration = `${duration}s`;
+ 
+                 const delay = Math.random() * 10;
+                 particle.style.animationDelay = `${delay}s`;
+ 
+                 const randomColor = colors [Math.floor(Math.random() * colors.length)];
+                 particle.style.backgroundColor = randomColor;
+ 
+                 particleContainer.appendChild(particle);
+             }
+         });
+     </script>
+ 
+ </body>
+ </html>
